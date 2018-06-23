@@ -3,8 +3,40 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, Conv2DTranspose, Fl
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 import h5py
 import numpy as np
+import sys
 
+"""
+Sample running command:
+python3 CAD.py model_type input_data output_path
+"""
+
+input_data_path = sys.argv[2]
+output_path = sys.argv[3]
+
+"""
+Different models to try out
+"""
 def getModel_1():
+    """
+    Flat model
+    :return:
+    """
+    input_img = Input(shape=(1, 28, 28))
+    x = Flatten()(input_img)
+    x = Dense(512, activation='relu')(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dense(784, activation='sigmoid')(x)
+    output = Reshape((1,28,28))(x)
+    model = Model(input_img, output)
+
+    return model
+
+def getModel_2():
+    """
+    Convolutional auto encoder with transposed convolutions
+    :return:
+    """
     input_img = Input(shape=(1,28,28))
     x = Conv2D(4,(3,3),
                activation='relu',
@@ -13,8 +45,8 @@ def getModel_1():
                activation='relu',
                data_format='channels_first')(x)
     x = Flatten()(x)
-    code = Dense(512)(x)
-    x = Dense(4608)(code)
+    code = Dense(512, activation='relu')(x)
+    x = Dense(4608, activation='relu')(code)
     x = Reshape((8,24,24))(x)
     x = Conv2DTranspose(4, (3,3),
                         activation='relu',
@@ -26,19 +58,11 @@ def getModel_1():
     model = Model(input_img, decoded)
     return model
 
-def getModel_2():
-    input_img = Input(shape=(1, 28, 28))
-    x = Flatten()(input_img)
-    x = Dense(512)(x)
-    x = Dense(256)(x)
-    x = Dense(512)(x)
-    x = Dense(784)(x)
-    output = Reshape((1,28,28))(x)
-    model = Model(input_img, output)
-
-    return model
-
 def getModel_3():
+    """
+    Convolutional auto encoder with upsampling layers
+    :return:
+    """
     input_img = Input(shape=(1,28,28))
     x = Conv2D(8,(3,3),
                activation='relu',
@@ -51,8 +75,8 @@ def getModel_3():
                data_format='channels_first')(x)
     x = MaxPooling2D((2,2))(x)
     x = Flatten()(x)
-    code = Dense(512)(x)
-    x = Dense(784)(code)
+    code = Dense(512, activation='relu')(x)
+    x = Dense(784, activation='relu')(code)
     x = Reshape((16,7,7))(x)
     x = UpSampling2D((2,2),
                      data_format='channels_first')(x)
@@ -70,10 +94,12 @@ def getModel_3():
     model = Model(input_img, decoded)
     return model
 
-
+"""
+Training function
+"""
 def train(model):
     # Load datasets
-    with h5py.File('data.hdf5','r') as f:
+    with h5py.File(input_data_path,'r') as f:
         X_train = f['X_train'][()]
         Y_train = f['Y_train'][()]
         X_valid = f['X_valid'][()]
@@ -86,22 +112,32 @@ def train(model):
     Y_valid = Y_valid[:, np.newaxis, :, :]
 
     # Callbacks
-    modelcp = ModelCheckpoint("saved-model-{epoch:02d}-{val_loss:.4f}.hdf5",
+    modelcp = ModelCheckpoint(output_path+"/saved-model-{epoch:02d}-{val_loss:.4f}.hdf5",
                               save_best_only=True,
                               mode='min')
     earlystop = EarlyStopping(monitor='val_loss', patience=5)
 
-
+    # Fitting
     model.fit(X_train, Y_train, validation_data=(X_valid, Y_valid),
-              epochs=50,
+              epochs=100,
               batch_size=128,
               shuffle=True,
               callbacks=[modelcp, earlystop],
               verbose=2)
 
-    model.save('model.hdf5')
+    model.save(output_path+'/model.hdf5')
 
-model = getModel_3()
+
+"""
+Main running
+"""
+if sys.argv[1] == 'flat':
+    model = getModel_1()
+elif sys.argv[1] == 'convt':
+    model = getModel_2()
+elif sys.argv[1] == 'upsample':
+    model = getModel_3()
+
 print(model.summary())
 model.compile(optimizer='adam', loss='mse')
 train(model)

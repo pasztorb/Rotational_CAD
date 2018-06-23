@@ -11,7 +11,7 @@ output_path = sys.argv[2]
 
 num_im = 5
 
-f = h5py.File('data_1.hdf5','r')
+f = h5py.File('data.hdf5','r')
 
 # Plot training images
 train_index = np.random.randint(0,f['X_train'].shape[0]-1, num_im)
