@@ -68,12 +68,14 @@ def getModel_3():
                activation='relu',
                padding='same',
                data_format='channels_first')(input_img)
-    x = MaxPooling2D((2,2))(x)
+    x = MaxPooling2D((2,2),
+                     data_format='channels_first')(x)
     x = Conv2D(16,(3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
-    x = MaxPooling2D((2,2))(x)
+    x = MaxPooling2D((2,2),
+                     data_format='channels_first')(x)
     x = Flatten()(x)
     code = Dense(512, activation='relu')(x)
     x = Dense(784, activation='relu')(code)
