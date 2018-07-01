@@ -153,7 +153,7 @@ def train(model):
     modelcp = ModelCheckpoint(output_path+"/saved-model-{epoch:02d}-{val_loss:.4f}.hdf5",
                               save_best_only=True,
                               mode='min')
-    earlystop = EarlyStopping(monitor='val_loss', patience=5)
+    earlystop = EarlyStopping(monitor='val_loss', patience=10)
 
     # Fitting
     model.fit(X_train, Y_train, validation_data=(X_valid, Y_valid),
