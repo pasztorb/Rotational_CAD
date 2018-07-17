@@ -51,8 +51,10 @@ def getModel_deconv():
                activation='relu',
                data_format='channels_first')(x)
     x = Flatten()(x)
+    x = Dense(512, activation='relu')(x)
     code = Dense(256, activation='relu')(x)
-    x = Dense(1600, activation='relu')(code)
+    x = Dense(512, activation='relu')(code)
+    x = Dense(1600, activation='relu')(x)
     x = Reshape((4,20,20))(x)
     x = Conv2DTranspose(32, (3,3),
                         activation='relu',
