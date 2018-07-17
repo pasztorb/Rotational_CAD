@@ -104,6 +104,9 @@ def getModel_upsample():
     # Decoder
     x = UpSampling2D((2,2),
                      data_format='channels_first')(encoded)
+    # Crop from 16x8x8 to 16x7x7
+    x = Cropping2D(cropping=((0,1),(0,1)),
+                   data_format='channels_first')(x)
     x = Conv2D(16, (3,3),
                activation='relu',
                padding='same',
@@ -120,10 +123,7 @@ def getModel_upsample():
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
-    # Size 32x4x4
-    # Crop it to 28x28x4
-    x = Cropping2D(cropping=((2,2),(2,2)),
-                   data_format='channels_first')(x)
+    # Size 28x4x4
     decoded = Conv2D(1, (3,3),
                      padding='same',
                      activation='sigmoid',
