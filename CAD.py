@@ -80,56 +80,55 @@ def getModel_upsample():
     # Input
     input_img = Input(shape=(1,28,28))
     # Encoder
-    x = Conv2D(32,(3,3),
+    x = Conv2D(8,(3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(input_img)
     x = MaxPooling2D((2,2),
                      padding='same',
-                     data_format='channels_first')(x)
-    x = Conv2D(32,(3,3),
+                     data_format='channels_first')(x) # Size 8x14x14
+    x = Conv2D(16,(3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
     x = MaxPooling2D((2,2),
                      padding='same',
-                     data_format='channels_first')(x)
+                     data_format='channels_first')(x) # Size 16x7x7
     x = Conv2D(16,(3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
-    # Size 16x4x4
+    # Encoded
     encoded = MaxPooling2D((2,2),
                         padding='same',
-                        data_format='channels_first')(x)
+                        data_format='channels_first')(x) # Size 16x4x4
 
     # Decoder
     x = UpSampling2D((2,2),
-                     data_format='channels_first')(encoded)
-    # Crop from 16x8x8 to 16x7x7
-    x = Cropping2D(cropping=((0,1),(0,1)),
-                   data_format='channels_first')(x)
+                     data_format='channels_first')(encoded) # Size 16x8x8
     x = Conv2D(16, (3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
     x = UpSampling2D((2,2),
-                     data_format='channels_first')(x)
-    x = Conv2D(32, (3,3),
+                     data_format='channels_first')(x) # Size 16x16x16
+    x = Conv2D(8, (3,3),
                activation='relu',
                padding='same',
                data_format='channels_first')(x)
     x = UpSampling2D((2,2),
-                     data_format='channels_first')(x)
-    x = Conv2D(32, (3,3),
+                     data_format='channels_first')(x) # Size 8x32x32
+    x = Conv2D(4, (3,3),
                activation='relu',
                padding='same',
-               data_format='channels_first')(x)
-    # Size 28x4x4
-    decoded = Conv2D(1, (3,3),
+               data_format='channels_first')(x)# Size 4x32x32
+    x = Conv2D(1, (3,3),
                      padding='same',
                      activation='sigmoid',
                      data_format='channels_first')(x)
+    # Crop from 1x32x32 to 1x28x28
+    decoded = Cropping2D(cropping=((2,2),(2,2)),
+                   data_format='channels_first')(x)
 
     model = Model(input_img, decoded)
     return model
@@ -159,7 +158,7 @@ def train(model):
 
     # Fitting
     model.fit(X_train, Y_train, validation_data=(X_valid, Y_valid),
-              epochs=100,
+              epochs=500,
               batch_size=128,
               shuffle=True,
               callbacks=[modelcp, earlystop],
@@ -171,13 +170,14 @@ def train(model):
 """
 Main running
 """
-if sys.argv[1] == 'flat':
-    model = getModel_1()
-elif sys.argv[1] == 'convt':
-    model = getModel_deconv()
-elif sys.argv[1] == 'upsample':
-    model = getModel_upsample()
+if __name__ == '__main__':
+    if sys.argv[1] == 'flat':
+        model = getModel_1()
+    elif sys.argv[1] == 'convt':
+        model = getModel_deconv()
+    elif sys.argv[1] == 'upsample':
+        model = getModel_upsample()
 
-print(model.summary())
-model.compile(optimizer='adam', loss='mse')
-train(model)
+    print(model.summary())
+    model.compile(optimizer='rmsprop', loss='mse')
+    train(model)
