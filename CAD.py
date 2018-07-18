@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Input, Dense, Conv1D, Conv2D, MaxPooling2D, Conv2DTranspose, Flatten,Reshape, UpSampling2D, Cropping2D
+from keras.layers import Input, Dense, Conv2D, MaxPooling2D, Conv2DTranspose, Flatten,Reshape, UpSampling2D, Cropping2D
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 import h5py
 import numpy as np
@@ -163,7 +163,7 @@ def getModel_upsample():
                activation='relu',
                padding='same',
                data_format='channels_first')(x) # Size 4x32x32
-    x = Conv1D(1, 1,
+    x = Conv2D(1, (1,1),
              padding='same',
              activation='sigmoid',
              data_format='channels_first')(x) # Size 1x32x32
