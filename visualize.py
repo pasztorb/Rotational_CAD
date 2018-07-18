@@ -42,6 +42,8 @@ if __name__ == '__main__':
     # Open the hdf5 file
     file = h5py.File('data.hdf5', 'r')
 
+    # Set the random seed of the numpy.random library
+    np.random.seed(17)
     # Plot the images
     plot_figures(file, 'X_train', 'Y_train')
     plot_figures(file, 'X_valid', 'Y_valid')
