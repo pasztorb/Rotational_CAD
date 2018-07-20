@@ -38,36 +38,37 @@ def getModel_deconv():
     :return:
     """
     input_img = Input(shape=(1,28,28))
-    x = Conv2D(4,(3,3),
-               activation='relu',
-               data_format='channels_first')(input_img) # Size 4x26x26
-    x = Conv2D(4,(3,3),
-               activation='relu',
-               data_format='channels_first')(x) # Size 4x24x24
-    x = Conv2D(8,(3,3),
-               activation='relu',
-               data_format='channels_first')(x) # Size 8x22x22
-    x = Conv2D(8,(3,3),
-               activation='relu',
-               data_format='channels_first')(x) # Size 8x20x20
-    x = Flatten()(x)
-    x = Dense(1024, activation='relu')(x)
-    code = Dense(256, activation='relu')(x)
-    x = Dense(1024, activation='relu')(code)
-    x = Dense(3200, activation='relu')(x)
-    x = Reshape((8,20,20))(x)
-    x = Conv2DTranspose(8, (3,3),
-                        activation='relu',
-                        data_format='channels_first')(x) # Size 8x22x22
-    x = Conv2DTranspose(8, (3,3),
-                        activation='relu',
-                        data_format='channels_first')(x) # Size 8x24x24
-    x = Conv2DTranspose(4, (3,3),
-                        activation='relu',
-                        data_format='channels_first')(x) # Size 4x26x26
-    decoded = Conv2DTranspose(1, (3,3),
+    # Encoder, output size 16x4x4
+    for i in range(12):
+        filter_size = 2**(i//4+2) # Setting the number of filters (4 for the
+        if i == 0: # First layer
+            enc_x = Conv2D(filter_size,(3,3),
+                   activation='relu',
+                   data_format='channels_first')(input_img)
+        elif i == 11: # Last layer
+            code = Conv2D(filter_size,(3,3),
+                       activation='relu',
+                       data_format='channels_first')(enc_x)
+        else: # Middle layers
+            enc_x = Conv2D(filter_size,(3,3),
+                       activation='relu',
+                       data_format='channels_first')(enc_x)
+
+    # Decoder
+    for i in range(12):
+        filter_size = 2**(4-i//4)
+        if i == 0: # First layer
+            dec_x = Conv2DTranspose(filter_size, (3,3),
+                                activation='relu',
+                                data_format='channels_first')(code)
+        elif i==11: # Last layer
+            decoded = Conv2DTranspose(1, (3,3),
                         activation='sigmoid',
-                        data_format='channels_first')(x) # Size 1x28x28
+                        data_format='channels_first')(dec_x)
+        else: # Middle layers
+            dec_x = Conv2DTranspose(filter_size, (3,3),
+                                activation='relu',
+                                data_format='channels_first')(dec_x)
 
     model = Model(input_img, decoded)
     return model
@@ -204,8 +205,7 @@ def train(model):
               shuffle=True,
               callbacks=[modelcp, earlystop],
               verbose=2)
-
-    model.save(output_path+'/model.hdf5')
+    return
 
 
 """
