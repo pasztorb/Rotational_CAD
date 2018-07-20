@@ -175,6 +175,61 @@ def getModel_upsample():
     model = Model(input_img, decoded)
     return model
 
+def getModel_comb():
+    # Input
+    input_img = Input(shape=(1, 28, 28))
+    # Encoder
+    x = Conv2D(8,(3,3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(input_img)
+    x = Conv2D(8,(3,3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    x = MaxPooling2D((2,2),
+                     padding='same',
+                     data_format='channels_first')(x) # Size 8x14x14
+    x = Conv2D(16,(3,3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    x = Conv2D(16,(3,3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    x = MaxPooling2D((2,2),
+                     padding='same',
+                     data_format='channels_first')(x) # Size 16x7x7
+    x = Flatten()(x)
+    code = Dense(256)(x)
+    # Decoder
+    x = Dense(784)(code)
+    x = Reshape((16,7,7))(x)
+    x = UpSampling2D((2, 2),
+                     data_format='channels_first')(x)
+    x = Conv2D(16, (3, 3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    x = Conv2D(16, (3, 3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    x = UpSampling2D((2, 2),
+                     data_format='channels_first')(x)  # Size 16x16x16
+    x = Conv2D(8, (3, 3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+    decoded = Conv2D(1, (3, 3),
+               activation='relu',
+               padding='same',
+               data_format='channels_first')(x)
+
+    model = Model(input_img, decoded)
+    return model
+
 """
 Training function
 """
@@ -218,6 +273,8 @@ if __name__ == '__main__':
         model = getModel_deconv()
     elif sys.argv[1] == 'upsample':
         model = getModel_upsample()
+    elif sys.argv[1] == 'comb':
+        model = getModel_comb()
 
     print(model.summary())
     model.compile(optimizer='rmsprop', loss='mse')
