@@ -8,9 +8,10 @@ import numpy as np
 python3 visualize.py model_path output_path
 """
 
+# Function that plots the given input
 def plot_figures(f, x_title, y_title):
     # Plot training images
-    train_index = np.random.randint(0,f[x_title].shape[0]-1, num_im)
+    train_index = np.random.randint(0, f[x_title].shape[0]-1, num_im)
     for i in train_index:
         # Initialize the subplots
         fig, axes = plt.subplots(nrows=1, ncols=3)
@@ -32,11 +33,12 @@ def plot_figures(f, x_title, y_title):
 
 
 if __name__ == '__main__':
+    # Load the model
     model_path = sys.argv[1]
     model = load_model(model_path)
-
+    # Retrieve the output path
     output_path = sys.argv[2]
-
+    # Set the number of images plotted for each category
     num_im = 20
 
     # Open the hdf5 file

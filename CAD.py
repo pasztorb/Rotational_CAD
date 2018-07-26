@@ -8,8 +8,9 @@ import sys
 """
 Sample running command:
 python3 CAD.py model_type input_data output_path
+model types: flat, convt, upsample, comb
 """
-
+# Reading in the given paths
 input_data_path = sys.argv[2]
 output_path = sys.argv[3]
 
@@ -18,8 +19,8 @@ Different models to try out
 """
 def getModel_1():
     """
-    Flat model
-    :return:
+    Flat model with only fully connected layers
+    :return: model
     """
     input_img = Input(shape=(1, 28, 28))
     x = Flatten()(input_img)
@@ -35,7 +36,7 @@ def getModel_1():
 def getModel_deconv():
     """
     Convolutional auto encoder with transposed convolutions
-    :return:
+    :return: model
     """
     input_img = Input(shape=(1,28,28))
     # Encoder, output size 16x4x4
@@ -76,7 +77,7 @@ def getModel_deconv():
 def getModel_upsample():
     """
     Convolutional auto encoder with upsampling layers
-    :return:
+    :return: model
     """
     # Input
     input_img = Input(shape=(1,28,28))
@@ -176,6 +177,10 @@ def getModel_upsample():
     return model
 
 def getModel_comb():
+    """
+    Combined Autoencoder with convolutional layers, fully connected layers and upsampling decoder
+    :return: model
+    """
     # Input
     input_img = Input(shape=(1, 28, 28))
     # Encoder
@@ -247,7 +252,7 @@ def train(model):
     X_valid = X_valid[:, np.newaxis, :, :]
     Y_valid = Y_valid[:, np.newaxis, :, :]
 
-    # Callbacks
+    # Callbacks: checkpoint saving and earlystopping
     modelcp = ModelCheckpoint(output_path+"/saved-model-{epoch:02d}-{val_loss:.4f}.hdf5",
                               save_best_only=True,
                               mode='min')
@@ -267,6 +272,7 @@ def train(model):
 Main running
 """
 if __name__ == '__main__':
+    # Construct the model
     if sys.argv[1] == 'flat':
         model = getModel_1()
     elif sys.argv[1] == 'convt':
@@ -275,7 +281,9 @@ if __name__ == '__main__':
         model = getModel_upsample()
     elif sys.argv[1] == 'comb':
         model = getModel_comb()
-
+    # Print model summary
     print(model.summary())
+    # Compile the model
     model.compile(optimizer='rmsprop', loss='mse')
+    # Train the model
     train(model)
